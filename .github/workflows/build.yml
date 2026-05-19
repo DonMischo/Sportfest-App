@@ -26,14 +26,12 @@ jobs:
           node-version: "20"
 
       - name: Install Python dependencies
-        run: |
-          pip install -r backend/requirements.txt
-          pip install pyinstaller pillow
+        run: pip install -r backend/requirements.txt pyinstaller pillow
 
       - name: Generate icon
         run: python assets/make_icon.py
 
-      - name: Install Node dependencies & build frontend
+      - name: Build React frontend
         run: |
           cd frontend
           npm ci
@@ -44,32 +42,17 @@ jobs:
           if (Test-Path backend/static) { Remove-Item -Recurse -Force backend/static }
           Copy-Item -Recurse frontend/dist backend/static
 
-      - name: Bundle with PyInstaller
+      - name: Build Python backend (onedir via spec)
         run: |
-          $root = $env:GITHUB_WORKSPACE
-          pyinstaller `
-            --onefile `
-            --name Sportfest `
-            --icon "$root/assets/icon.ico" `
-            --distpath dist `
+          pyinstaller backend/sportfest.spec `
+            --distpath api-dist `
             --workpath build_tmp `
-            --specpath build_tmp `
-            --paths "$root/backend" `
-            --add-data "$root/backend/static;static" `
-            --hidden-import uvicorn.logging `
-            --hidden-import uvicorn.loops `
-            --hidden-import uvicorn.loops.auto `
-            --hidden-import uvicorn.protocols `
-            --hidden-import uvicorn.protocols.http `
-            --hidden-import uvicorn.protocols.http.auto `
-            --hidden-import uvicorn.protocols.websockets `
-            --hidden-import uvicorn.protocols.websockets.auto `
-            --hidden-import uvicorn.lifespan `
-            --hidden-import uvicorn.lifespan.on `
-            backend/main.py
+            --noconfirm
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: dist/Sportfest.exe
-          generate_release_notes: true
+      - name: Install Electron dependencies
+        run: npm ci
+
+      - name: Build Electron installer
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run dist:win -- --publish always

@@ -1,0 +1,19 @@
+{
+  "name": "sportfest",
+  "version": "1.0.0",
+  "description": "Sportfest DLV Auswertungssoftware",
+  "author": "DonMischo",
+  "main": "electron/main.js",
+  "scripts": {
+    "electron:dev": "electron .",
+    "dist:win": "electron-builder --win",
+    "dist": "electron-builder"
+  },
+  "dependencies": {
+    "electron-updater": "^6.3.9"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.8"
+  }
+}

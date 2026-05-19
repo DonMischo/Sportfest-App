@@ -1,0 +1,30 @@
+appId: com.donmischo.sportfest
+productName: Sportfest
+
+asar: true
+
+# Backend binary bundled outside ASAR (Python can't run from inside a zip)
+extraResources:
+  - from: api-dist/
+    to: api
+
+directories:
+  buildResources: electron/assets
+  output: dist
+
+win:
+  icon: electron/assets/icon.ico
+  target:
+    - target: nsis
+      arch: [x64]
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  installerIcon: electron/assets/icon.ico
+  uninstallerIcon: electron/assets/icon.ico
+
+publish:
+  provider: github
+  owner: DonMischo
+  repo: Sportfest-DLV

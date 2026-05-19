@@ -18,6 +18,13 @@ backend/static/
 node_modules/
 frontend/dist/
 
+# Electron build artefacts
+api-dist/
+dist/
+build_tmp/
+*.spec.bak
+!backend/sportfest.spec
+
 # Env
 .env
 .env.*
