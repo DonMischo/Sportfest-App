@@ -25,9 +25,10 @@ build_tmp/
 *.spec.bak
 !backend/sportfest.spec
 
-# Env
+# Env (keep .env.production — it only sets VITE_API_URL= which is safe to commit)
 .env
-.env.*
+.env.local
+.env.*.local
 
 # OS
 .DS_Store
