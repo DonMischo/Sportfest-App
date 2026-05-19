@@ -58,9 +58,11 @@ def gesamt_auswertung():
 
 
 @router.get("/disziplin")
-def disziplin_auswertung():
+def disziplin_auswertung(overall: bool = False):
     """
-    Top 3 per discipline per Jahrgang per Geschlecht.
+    Top 3 per discipline per Geschlecht.
+    overall=false  → grouped by Jahrgang (default)
+    overall=true   → across all Jahrgänge combined
     """
     with get_conn() as conn:
         rows = conn.execute("""
@@ -80,18 +82,22 @@ def disziplin_auswertung():
             JOIN students s ON s.id = r.student_id
             JOIN disciplines d ON d.id = r.discipline_id AND d.enabled = 1
             WHERE r.points IS NOT NULL
-            ORDER BY r.discipline_id, s.jahrgang, s.geschlecht, r.points DESC
+            ORDER BY r.discipline_id, s.geschlecht, r.points DESC
         """).fetchall()
 
     rows = [dict(r) for r in rows]
 
     result: dict[str, dict] = {}
     for row in rows:
-        key = f"{row['discipline_id']}-{row['jahrgang']}-{row['geschlecht']}"
+        key = (
+            f"{row['discipline_id']}-{row['geschlecht']}"
+            if overall
+            else f"{row['discipline_id']}-{row['jahrgang']}-{row['geschlecht']}"
+        )
         result.setdefault(key, {
             "discipline_id":   row["discipline_id"],
             "discipline_name": row["discipline_name"],
-            "jahrgang":        row["jahrgang"],
+            "jahrgang":        None if overall else row["jahrgang"],
             "geschlecht":      row["geschlecht"],
             "students":        [],
         })
@@ -100,5 +106,7 @@ def disziplin_auswertung():
 
     return sorted(
         result.values(),
-        key=lambda x: (x["discipline_id"], x["jahrgang"], x["geschlecht"]),
+        key=lambda x: (x["discipline_id"], x["geschlecht"])
+        if overall
+        else (x["discipline_id"], x["jahrgang"], x["geschlecht"]),
     )

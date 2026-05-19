@@ -82,8 +82,9 @@ export default function KlasseView({ klasse }) {
   const [activeTab, setActiveTab] = useState("männlich");
   const [students, setStudents]   = useState([]);
   const [disciplines, setDisciplines] = useState([]);
-  const [resultMap, setResultMap] = useState({}); // "studentId-disciplineId" → {value_raw, points}
+  const [resultMap, setResultMap] = useState({});
   const [loading, setLoading]     = useState(true);
+  const [sortByPoints, setSortByPoints] = useState(false); // false = by Nummer, true = by Punkte desc
 
   useEffect(() => {
     setLoading(true);
@@ -117,16 +118,19 @@ export default function KlasseView({ klasse }) {
     });
   }, []);
 
-  const filtered = students.filter((s) => s.geschlecht === activeTab);
-
   if (loading) return <div className="spinner" />;
 
-  const totalPoints = (student) => {
-    return disciplines.reduce((sum, d) => {
-      const r = resultMap[`${student.id}-${d.id}`];
-      return sum + (r?.points ?? 0);
-    }, 0);
-  };
+  const totalPoints = (student) => disciplines.reduce((sum, d) => {
+    const r = resultMap[`${student.id}-${d.id}`];
+    return sum + (r?.points ?? 0);
+  }, 0);
+
+  const filtered = students
+    .filter((s) => s.geschlecht === activeTab)
+    .slice()
+    .sort((a, b) =>
+      sortByPoints ? totalPoints(b) - totalPoints(a) : a.nummer - b.nummer
+    );
 
   return (
     <div>
@@ -153,7 +157,21 @@ export default function KlasseView({ klasse }) {
                 <th>#</th>
                 <th>Name</th>
                 {disciplines.map((d) => <th key={d.id}>{d.name}</th>)}
-                <th>Gesamt</th>
+                <th>
+                  <button
+                    onClick={() => setSortByPoints((v) => !v)}
+                    style={{
+                      background: "none", border: "none", cursor: "pointer",
+                      font: "inherit", fontWeight: 700, fontSize: 11,
+                      color: sortByPoints ? "var(--primary)" : "inherit",
+                      display: "flex", alignItems: "center", gap: 4,
+                      textTransform: "uppercase", letterSpacing: ".05em", padding: 0,
+                    }}
+                    title="Sortierung umschalten"
+                  >
+                    Gesamt {sortByPoints ? "▼" : "⇅"}
+                  </button>
+                </th>
               </tr>
             </thead>
             <tbody>

@@ -1,4 +1,4 @@
-const BASE = "";
+const BASE = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8080";
 
 async function req(method, path, body) {
   const opts = { method, headers: {} };
@@ -40,5 +40,5 @@ export const api = {
 
   // Auswertung
   getGesamt:     () => req("GET", "/auswertung/gesamt"),
-  getDisziplin:  () => req("GET", "/auswertung/disziplin"),
+  getDisziplin:  (overall = false) => req("GET", `/auswertung/disziplin?overall=${overall}`),
 };

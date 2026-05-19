@@ -3,12 +3,6 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [react()],
-  server: {
-    proxy: {
-      "/students":    "http://localhost:8080",
-      "/disciplines": "http://localhost:8080",
-      "/results":     "http://localhost:8080",
-      "/auswertung":  "http://localhost:8080",
-    },
-  },
+  // No proxy needed — frontend calls backend directly (CORS is open on the backend)
+  // In the packaged .exe the React build is served by FastAPI itself (BASE = "")
 });

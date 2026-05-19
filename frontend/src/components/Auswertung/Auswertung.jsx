@@ -10,9 +10,64 @@ function MedalIcon({ rank }) {
   return null;
 }
 
-function GestaltRanking({ data }) {
-  const [tab, setTab] = useState("männlich");
+function Toggle({ value, onChange }) {
+  return (
+    <div className="toggle-wrap">
+      <button
+        className={`toggle-btn ${!value ? "active" : ""}`}
+        onClick={() => onChange(false)}
+      >
+        Nach Jahrgang
+      </button>
+      <button
+        className={`toggle-btn ${value ? "active" : ""}`}
+        onClick={() => onChange(true)}
+      >
+        Gesamt
+      </button>
+    </div>
+  );
+}
 
+function DisziplinTable({ group, discId }) {
+  return (
+    <div className="card" style={{ padding: 0 }}>
+      <table className="rank-table">
+        <thead>
+          <tr>
+            <th style={{ width: 36 }}>#</th>
+            <th>Name</th>
+            <th>Klasse</th>
+            {group.jahrgang != null && <th>Jahrgang</th>}
+            <th>Leistung</th>
+            <th>Punkte</th>
+          </tr>
+        </thead>
+        <tbody>
+          {group.students.map((s, i) => (
+            <tr key={s.student_id}>
+              <td><MedalIcon rank={i + 1} /></td>
+              <td><strong>{s.nachname}</strong>, {s.vorname}</td>
+              <td>{s.klasse}</td>
+              {group.jahrgang != null && <td>{s.jahrgang}</td>}
+              <td style={{ color: "var(--muted)" }}>
+                {s.value != null
+                  ? (discId === "ausdauerlauf" || discId === "sprint"
+                      ? `${s.value}s`
+                      : `${s.value}m`)
+                  : "—"}
+              </td>
+              <td className="points">{s.points}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function GesamtRanking({ data }) {
+  const [tab, setTab] = useState("männlich");
   const filtered = data.filter((g) => g.geschlecht === tab);
 
   return (
@@ -24,9 +79,7 @@ function GestaltRanking({ data }) {
           </button>
         ))}
       </div>
-      {filtered.length === 0 && (
-        <div className="alert alert-info">Keine Ergebnisse vorhanden.</div>
-      )}
+      {filtered.length === 0 && <div className="alert alert-info">Keine Ergebnisse vorhanden.</div>}
       {filtered.map((group) => (
         <div key={group.jahrgang} className="rank-group">
           <div className="rank-group-title">Jahrgang {group.jahrgang}</div>
@@ -58,15 +111,17 @@ function GestaltRanking({ data }) {
   );
 }
 
-function DisziplinRanking({ data }) {
+function DisziplinRanking({ data, overall }) {
   const [tab, setTab] = useState("männlich");
 
   // Group by discipline
   const byDisziplin = {};
   data.filter((d) => d.geschlecht === tab).forEach((d) => {
-    const key = d.discipline_id;
-    byDisziplin[key] = byDisziplin[key] || { name: d.discipline_name, jahrgaenge: [] };
-    byDisziplin[key].jahrgaenge.push(d);
+    byDisziplin[d.discipline_id] = byDisziplin[d.discipline_id] || {
+      name: d.discipline_name,
+      groups: [],
+    };
+    byDisziplin[d.discipline_id].groups.push(d);
   });
 
   return (
@@ -78,47 +133,24 @@ function DisziplinRanking({ data }) {
           </button>
         ))}
       </div>
+
       {Object.keys(byDisziplin).length === 0 && (
         <div className="alert alert-info">Keine Ergebnisse vorhanden.</div>
       )}
+
       {Object.entries(byDisziplin).map(([discId, disc]) => (
         <div key={discId} className="rank-group">
           <div className="rank-group-title">{disc.name}</div>
-          {disc.jahrgaenge.map((jg) => (
-            <div key={jg.jahrgang} style={{ marginBottom: 12 }}>
-              <div className="section-title">Jahrgang {jg.jahrgang}</div>
-              <div className="card" style={{ padding: 0 }}>
-                <table className="rank-table">
-                  <thead>
-                    <tr>
-                      <th style={{ width: 36 }}>#</th>
-                      <th>Name</th>
-                      <th>Klasse</th>
-                      <th>Leistung</th>
-                      <th>Punkte</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {jg.students.map((s, i) => (
-                      <tr key={s.student_id}>
-                        <td><MedalIcon rank={i + 1} /></td>
-                        <td><strong>{s.nachname}</strong>, {s.vorname}</td>
-                        <td>{s.klasse}</td>
-                        <td style={{ color: "var(--muted)" }}>
-                          {s.value != null
-                            ? (discId === "ausdauerlauf" || discId === "sprint"
-                                ? `${s.value}s`
-                                : `${s.value}m`)
-                            : "—"}
-                        </td>
-                        <td className="points">{s.points}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+          {overall ? (
+            <DisziplinTable group={disc.groups[0]} discId={discId} />
+          ) : (
+            disc.groups.map((g) => (
+              <div key={g.jahrgang} style={{ marginBottom: 12 }}>
+                <div className="section-title">Jahrgang {g.jahrgang}</div>
+                <DisziplinTable group={g} discId={discId} />
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       ))}
     </>
@@ -126,25 +158,34 @@ function DisziplinRanking({ data }) {
 }
 
 export default function Auswertung({ mode }) {
-  const [data, setData]     = useState([]);
+  const [data, setData]       = useState([]);
   const [loading, setLoading] = useState(true);
+  const [overall, setOverall] = useState(false);
 
   useEffect(() => {
     setLoading(true);
-    const fetch = mode === "gesamt" ? api.getGesamt() : api.getDisziplin();
-    fetch.then(setData).finally(() => setLoading(false));
-  }, [mode]);
-
-  if (loading) return <div className="spinner" />;
+    const req = mode === "gesamt"
+      ? api.getGesamt()
+      : api.getDisziplin(overall);
+    req.then(setData).finally(() => setLoading(false));
+  }, [mode, overall]);
 
   return (
     <div>
-      <div className="page-title">
-        {mode === "gesamt" ? "Gesamt-Ranking" : "Disziplin-Ranking"}
+      <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
+        <div className="page-title" style={{ marginBottom: 0 }}>
+          {mode === "gesamt" ? "Gesamt-Ranking" : "Disziplin-Ranking"}
+        </div>
+        {mode === "disziplin" && (
+          <Toggle value={overall} onChange={setOverall} />
+        )}
       </div>
-      {mode === "gesamt"
-        ? <GestaltRanking data={data} />
-        : <DisziplinRanking data={data} />}
+
+      {loading
+        ? <div className="spinner" />
+        : mode === "gesamt"
+          ? <GesamtRanking data={data} />
+          : <DisziplinRanking data={data} overall={overall} />}
     </div>
   );
 }

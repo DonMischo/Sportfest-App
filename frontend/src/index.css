@@ -132,6 +132,20 @@ input:focus { outline: none; border-color: var(--primary); }
 .points { font-weight: 700; color: var(--primary); }
 .points-empty { color: var(--border); }
 
+/* Toggle (Jahrgang / Gesamt) */
+.toggle-wrap {
+  display: inline-flex; border: 1px solid var(--border);
+  border-radius: 6px; overflow: hidden;
+}
+.toggle-btn {
+  padding: 5px 14px; font-size: 12px; font-weight: 500;
+  background: var(--surface); border: none; cursor: pointer;
+  color: var(--muted); transition: all .15s;
+}
+.toggle-btn + .toggle-btn { border-left: 1px solid var(--border); }
+.toggle-btn.active { background: var(--primary); color: #fff; }
+.toggle-btn:hover:not(.active) { background: var(--bg); }
+
 /* Spinner */
 .spinner {
   width: 20px; height: 20px; border: 2px solid var(--border);
