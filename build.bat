@@ -16,7 +16,10 @@ pip install -r backend\requirements.txt --quiet || exit /b 1
 pip install pyinstaller --quiet || exit /b 1
 set PATH=%PATH%;%APPDATA%\Python\Python314\Scripts
 
-echo [2/5] Installing Node dependencies...
+echo [2/5] Generating icon...
+python assets\make_icon.py || exit /b 1
+
+echo [3/5] Installing Node dependencies...
 cd frontend
 call npm install --silent || exit /b 1
 
@@ -32,6 +35,7 @@ echo [5/5] Bundling with PyInstaller...
 pyinstaller ^
   --onefile ^
   --name Sportfest ^
+  --icon assets\icon.ico ^
   --distpath dist ^
   --workpath build_tmp ^
   --specpath build_tmp ^
