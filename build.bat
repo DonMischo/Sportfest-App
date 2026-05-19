@@ -39,6 +39,7 @@ pyinstaller ^
   --distpath dist ^
   --workpath build_tmp ^
   --specpath build_tmp ^
+  --paths backend ^
   --add-data "backend\static;static" ^
   --hidden-import uvicorn.logging ^
   --hidden-import uvicorn.loops ^

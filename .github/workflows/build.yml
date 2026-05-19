@@ -54,6 +54,7 @@ jobs:
             --distpath dist `
             --workpath build_tmp `
             --specpath build_tmp `
+            --paths "$root/backend" `
             --add-data "$root/backend/static;static" `
             --hidden-import uvicorn.logging `
             --hidden-import uvicorn.loops `
