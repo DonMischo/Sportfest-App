@@ -1,6 +1,6 @@
 {
   "name": "sportfest",
-  "version": "1.4.0",
+  "version": "2.0.0",
   "description": "Auswertungssoftware nach DLV Punktewertung",
   "author": "DonMischo",
   "main": "electron/main.js",
