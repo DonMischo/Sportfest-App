@@ -28,3 +28,4 @@ publish:
   provider: github
   owner: DonMischo
   repo: Sportfest-DLV
+  releaseType: release
