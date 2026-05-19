@@ -87,8 +87,8 @@ git tag -a "v%NEW_VERSION%" -m "v%NEW_VERSION%"
 
 :: ── Push ─────────────────────────────────────────────────────────────────────
 echo [5/5] Pushing to remote...
-git push
-git push --tags
+git push origin main
+git push origin --tags
 
 echo.
 echo ============================================================
