@@ -44,14 +44,15 @@ jobs:
 
       - name: Bundle with PyInstaller
         run: |
+          $root = $env:GITHUB_WORKSPACE
           pyinstaller `
             --onefile `
             --name Sportfest `
-            --icon assets/icon.ico `
+            --icon "$root/assets/icon.ico" `
             --distpath dist `
             --workpath build_tmp `
             --specpath build_tmp `
-            --add-data "backend/static;static" `
+            --add-data "$root/backend/static;static" `
             --hidden-import uvicorn.logging `
             --hidden-import uvicorn.loops `
             --hidden-import uvicorn.loops.auto `
