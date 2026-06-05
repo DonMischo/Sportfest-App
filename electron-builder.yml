@@ -2,6 +2,8 @@ appId: com.donmischo.sportfest
 productName: Sportfest
 
 asar: true
+asarUnpack:
+  - node_modules/@embedded-postgres/**/*
 
 # Backend binary bundled outside ASAR (Python can't run from inside a zip)
 extraResources:

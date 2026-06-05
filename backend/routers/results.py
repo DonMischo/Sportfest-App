@@ -18,7 +18,7 @@ def upsert_result(student_id: int, discipline_id: str, body: ResultIn):
 
     with get_conn() as conn:
         student = conn.execute(
-            "SELECT klasse, geschlecht FROM students WHERE id = ?", (student_id,)
+            "SELECT klasse, geschlecht FROM students WHERE id = %s", (student_id,)
         ).fetchone()
         if not student:
             raise HTTPException(404, "Student not found")
@@ -28,11 +28,11 @@ def upsert_result(student_id: int, discipline_id: str, body: ResultIn):
         conn.execute(
             """
             INSERT INTO results(student_id, discipline_id, value, points)
-                VALUES (?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s)
             ON CONFLICT(student_id, discipline_id)
-                DO UPDATE SET value = excluded.value,
-                              points = excluded.points,
-                              updated_at = datetime('now')
+                DO UPDATE SET value = EXCLUDED.value,
+                              points = EXCLUDED.points,
+                              updated_at = NOW()
             """,
             (student_id, discipline_id, value, points),
         )
@@ -44,7 +44,7 @@ def upsert_result(student_id: int, discipline_id: str, body: ResultIn):
 def delete_result(student_id: int, discipline_id: str):
     with get_conn() as conn:
         conn.execute(
-            "DELETE FROM results WHERE student_id = ? AND discipline_id = ?",
+            "DELETE FROM results WHERE student_id = %s AND discipline_id = %s",
             (student_id, discipline_id),
         )
     return {"ok": True}
@@ -62,10 +62,10 @@ def get_results(klasse: str | None = None, jahrgang: int | None = None):
         """
         params: list = []
         if klasse:
-            query += " AND s.klasse = ?"
+            query += " AND s.klasse = %s"
             params.append(klasse)
         if jahrgang:
-            query += " AND s.jahrgang = ?"
+            query += " AND s.jahrgang = %s"
             params.append(jahrgang)
         rows = conn.execute(query, params).fetchall()
     return [dict(r) for r in rows]

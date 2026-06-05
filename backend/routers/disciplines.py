@@ -15,7 +15,7 @@ def list_disciplines():
 def set_enabled(discipline_id: str, enabled: bool):
     with get_conn() as conn:
         conn.execute(
-            "UPDATE disciplines SET enabled = ? WHERE id = ?",
+            "UPDATE disciplines SET enabled = %s WHERE id = %s",
             (1 if enabled else 0, discipline_id),
         )
     return {"ok": True}
