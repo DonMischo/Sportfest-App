@@ -1,6 +1,7 @@
 import csv
 import io
 import re
+import chardet
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from database import get_conn
 
@@ -26,9 +27,17 @@ def _normalise_geschlecht(raw: str) -> str:
 @router.post("/import")
 async def import_students(file: UploadFile = File(...)):
     content = await file.read()
-    text = content.decode("utf-8-sig")  # handle BOM
 
-    dialect = csv.Sniffer().sniff(text[:1024], delimiters=",;\t")
+    encoding = chardet.detect(content).get("encoding") or "utf-8"
+    # utf-8-sig strips BOM when present; for other encodings decode normally
+    if encoding.lower().replace("-", "") in ("utf8", "utf8sig", "utf8bom"):
+        encoding = "utf-8-sig"
+    text = content.decode(encoding, errors="replace")
+
+    try:
+        dialect = csv.Sniffer().sniff(text[:2048], delimiters=",;\t")
+    except csv.Error:
+        dialect = csv.excel  # fallback: comma-separated
     reader = csv.DictReader(io.StringIO(text), dialect=dialect)
 
     rows = []
@@ -62,7 +71,7 @@ async def import_students(file: UploadFile = File(...)):
         conn.execute("DELETE FROM students")
         conn.executemany(
             "INSERT INTO students(nummer, nachname, vorname, klasse, jahrgang, geschlecht) "
-            "VALUES (?, ?, ?, ?, ?, ?)",
+            "VALUES (%s, %s, %s, %s, %s, %s)",
             rows,
         )
 
@@ -75,13 +84,13 @@ def list_students(klasse: str | None = None, jahrgang: int | None = None, geschl
         query = "SELECT * FROM students WHERE 1=1"
         params: list = []
         if klasse:
-            query += " AND klasse = ?"
+            query += " AND klasse = %s"
             params.append(klasse)
         if jahrgang:
-            query += " AND jahrgang = ?"
+            query += " AND jahrgang = %s"
             params.append(jahrgang)
         if geschlecht:
-            query += " AND geschlecht = ?"
+            query += " AND geschlecht = %s"
             params.append(geschlecht)
         query += " ORDER BY jahrgang, klasse, nachname, vorname"
         rows = conn.execute(query, params).fetchall()
